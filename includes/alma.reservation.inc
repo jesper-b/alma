@@ -466,6 +466,32 @@ function alma_reservation_exists($account, $reservation_id) {
 }
 
 /**
+ * Check if a reservation (issue) exists at the provider (ALMA).
+ *
+ * @param stdClass $account
+ *   Drupal user account object.
+ * @param string $issue_id
+ *   The id of the reservation to test for.
+ *
+ * @return bool
+ *   TRUE if the reservation (issue) exists else FALSE.
+ */
+function alma_reservation_issue_exists($account, $issue_id) {
+  $reservations = alma_reservation_get_reservations($account);
+  $id_split = array_values(array_filter(explode('ZX', $issue_id)));
+  $note = $id_split[1];
+  if(isset($id_split[2])) {
+    $note = $id_split[2] . ', ' . $note;
+  }
+  foreach ($reservations as $res) {
+    if ($res['record_id'] == $id_split[0] && isset($res['notes']) && $res['notes'] == $note) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
  * Helper function calculate the date in the feature base on interest period.
  *
  * @param int $expiry
