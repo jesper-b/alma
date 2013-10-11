@@ -87,6 +87,37 @@ function alma_loan_renew($account, $ids) {
 }
 
 /**
+ * Implements hook_loan_overdue().
+ *
+ * This functions finds all loans for a given user account and returns the loans
+ * as DingProviderLoan objects.
+ *
+ * @param Object $account
+ *   The user account to retrieve overdue loan for.
+ *
+ * @return array $results
+ *   An array of overdue loans.
+ */
+function alma_loan_overdue($account) {
+  $creds = ding_user_get_creds($account);
+  $results = array();
+
+  try {
+    // Get all loans form alma for the user account given.
+    $loans =  alma_client_invoke('get_overdue_loans', $creds['name'], $creds['pass']);
+  } catch (Exception $e) {
+    throw new DingProviderLoanUserError($e->getMessage());
+  }
+
+  foreach ($loans as $loan) {
+    $ding_loan = alma_loan_create_ding_loan($loan);
+    $results[$loan['id']] = $ding_loan;
+  }
+
+  return $results;
+}
+
+/**
  * Replace entity for the reservation.
  *
  * Should be used in the case object in not in Ting anymore or the reservation

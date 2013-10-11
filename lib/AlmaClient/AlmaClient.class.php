@@ -381,6 +381,48 @@ class AlmaClient {
   }
 
   /**
+   * Get patron's overdue loans.
+   *
+   * @param string $borr_card
+   *   Users borrower card number
+   * @param string $pin_code
+   *   Users pin code number
+   *
+   * @return array $loans
+   *   A list of overdue loans or an empty array.
+   */
+  public function get_overdue_loans($borr_card, $pin_code) {
+    $doc = $this->request('patron/loans/overdue', array('borrCard' => $borr_card, 'pinCode' => $pin_code));
+
+    $loans = array();
+    foreach ($doc->getElementsByTagName('loan') as $item) {
+      $id = $item->getAttribute('id');
+      $loan = array(
+        'id' => $id,
+        'branch' => $item->getAttribute('loanBranch'),
+        'loan_date' => $item->getAttribute('loanDate'),
+        'due_date' => $item->getAttribute('loanDueDate'),
+        'is_renewable' => ($item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('value') == 'yes') ? TRUE : FALSE,
+        'record_id' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('id'),
+        'record_available' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('isAvailable'),
+        'renewalCost' => $item->getAttribute('renewalCost'),
+        'renewalStatus' => $item->getAttribute('renewalStatus'),
+        'notes' => '',
+        'message' => '',
+      );
+      if ($item->getElementsByTagName('note')->length > 0) {
+        $loan['notes'] = $item->getElementsByTagName('note')->item(0)->getAttribute('value');
+      }
+      if($item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('value') == 'no') {
+        $loan['message'] = $item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('message');
+      }
+      $loans[$id] = $loan;
+    }
+    uasort($loans, 'AlmaClient::loan_sort');
+    return $loans;
+  }
+
+  /**
    * Helper function for sorting loans.
    */
   private static function loan_sort($a, $b) {
