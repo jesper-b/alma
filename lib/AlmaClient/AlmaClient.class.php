@@ -321,6 +321,8 @@ class AlmaClient {
       $reservation = array(
         'id' => $item->getAttribute('id'),
         'status' => $item->getAttribute('status'),
+        'deletable' => $item->getAttribute('isDeletable'),
+        'editable' => $item->getAttribute('isEditable'),
         'pickup_branch' => $item->getAttribute('reservationPickUpBranch'),
         'create_date' => $item->getAttribute('createDate'),
         'valid_from' => $item->getAttribute('validFromDate'),
@@ -329,6 +331,7 @@ class AlmaClient {
         'organisation_id' => $item->getAttribute('organisationId'),
         'record_id' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('id'),
         'record_available' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('isAvailable'),
+        'notes' => '',
       );
 
       if ($note = $item->getElementsByTagName('note')->item(0)) {

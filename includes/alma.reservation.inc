@@ -143,6 +143,7 @@ function alma_reservation_list($account, $type = NULL) {
         // Build standard array which matches all types of reservations.
         $data = array(
           'order_id' => $reservation['id'],
+          'organisation_Id' => $reservation['organisation_id'],
           'ding_entity_id' => variable_get('ting_agency', '') . ':' . $reservation['record_id'],
           'pickup_branch_id' => $reservation['pickup_branch'],
           'order_arrived' => NULL,
@@ -153,6 +154,7 @@ function alma_reservation_list($account, $type = NULL) {
           'expiry' => $reservation['valid_to'],
           'queue_number' => $reservation['queue_number'],
           'ill_status' => FALSE,
+          'status' => $reservation['status'],
           'notes' => isset($reservation['notes']) ? $reservation['notes'] : '',
         );
 
@@ -310,7 +312,8 @@ function alma_reservation_update($account, $ids, $options) {
   // Processing IDs. If at least one is updated, return true.
   foreach ($ids as $id) {
     if (isset($reservations[$id])) {
-      $expiry_date = !empty($options['interest_period']) ? alma_reservation_format_date(strtotime($reservations[$id]['valid_from']) + $options['interest_period'] * 86400) : $reservations[$id]['valid_to'];
+      $time = strtotime($reservations[$id]['valid_from']) + $options['interest_period'] * 86400;
+      $expiry_date = !empty($options['interest_period']) ? alma_reservation_format_date($time) : $reservations[$id]['valid_to'];
       $pickup_branch = !empty($options['alma_preferred_branch']) ? $options['alma_preferred_branch'] : $reservations[$id]['pickup_branch'];
       $changes = array(
         'valid_to' => $expiry_date,
