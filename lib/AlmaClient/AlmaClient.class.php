@@ -785,10 +785,13 @@ class AlmaClient {
   /**
    * Get details about one or more catalogue record.
    */
-  public function catalogue_record_detail($alma_ids) {
+  public function catalogue_record_detail($alma_ids, $borr_card = FALSE) {
     $params = array(
       'catalogueRecordKey' => $alma_ids,
     );
+    if($borr_card) {
+      $params['borrCard'] = $borr_card;
+    }
     $doc = $this->request('catalogue/detail', $params, FALSE);
     $data = array(
       'request_status' => $doc->getElementsByTagName('status')->item(0)->getAttribute('value'),
@@ -824,6 +827,10 @@ class AlmaClient {
       'edition' => $elem->getAttribute('edition'),
       'category' => $elem->getAttribute('category'),
     );
+    // New alma attributes, this replaces "showReservationButton"
+    if($elem->getAttribute('reservationButtonStatus') != null) {
+      $record['show_reservation_button'] = ($elem->getAttribute('reservationButtonStatus') == 'reservationOk') ? TRUE : FALSE;
+    }
 
     foreach ($elem->getElementsByTagName('author') as $item) {
       $record['authors'][] = $item->getAttribute('value');
@@ -864,7 +871,7 @@ class AlmaClient {
             $issue_list = array(
               'available_count' => 0,
               'branches' => array(),
-              'reservable' => $holdings[0]['reservable'],
+              'reservable' => $holdings[0]['showReservationButton'],
             );
 
             // Also create an array with the totals for each issue.
@@ -896,7 +903,7 @@ class AlmaClient {
     $holdings = array();
 
     foreach ($elem->getElementsByTagName('holding') as $item) {
-      $holdings[] = array(
+      $holding = array(
         'reservable' => $item->getAttribute('reservable'),
         'status' => $item->getAttribute('status'),
         'ordered_count' => (int) $item->getAttribute('nofOrdered'),
@@ -912,7 +919,13 @@ class AlmaClient {
         'available_count' => (int) $item->getAttribute('nofAvailableForLoan'),
         'shelf_mark' => $item->getAttribute('shelfMark'),
         'available_from' => $item->getAttribute('firstLoanDueDate'),
+        'showReservationButton' => ($item->getAttribute('showReservationButton') == 'yes') ? TRUE : FALSE
       );
+      // New alma attributes, this replaces "showReservationButton"
+      if($item->getAttribute('reservationButtonStatus') != null) {
+        $holding['showReservationButton'] = ($item->getAttribute('reservationButtonStatus') == 'reservationOk') ? TRUE : FALSE;
+      }
+      $holdings[] = $holding;
     }
 
     return $holdings;
