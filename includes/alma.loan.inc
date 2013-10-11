@@ -35,14 +35,8 @@ function alma_loan_list($account, $reset = FALSE) {
 
       $results = array();
       foreach ($loans as $loan) {
-        $results[$loan['id']] = new DingProviderLoan($loan['id'], array(
-          'ding_entity_id' => variable_get('ting_agency', '') . ':' . $loan['record_id'],
-          'loan_date' => $loan['loan_date'],
-          'expiry' => $loan['due_date'],
-          'renewable' => $loan['is_renewable'],
-          'materials_number' => $loan['id'],
-          'notes' => isset($loan['notes']) ? $loan['notes'] : DingEntityBase::NULL,
-        ));
+        $ding_loan = alma_loan_create_ding_loan($loan);
+        $results[$loan['id']] = $ding_loan;
       }
 
       // Store the reservations into ding session cache.
@@ -64,10 +58,14 @@ function alma_loan_renew($account, $ids) {
   $creds = ding_user_get_creds($account);
   $result = array();
   $res = alma_client_invoke('renew_loan', $creds['name'], $creds['pass'], $ids);
-
+  
   foreach ($ids as $id) {
     if (isset($res[$id]) && $res[$id] === TRUE) {
-      $result[$id] = DingProviderLoan::STATUS_RENEWED;
+      $ding_loan = alma_loan_create_ding_loan($loan);
+      $result[$id] = array(
+        'status' => DingProviderLoan::STATUS_RENEWED,
+        'loan' => $ding_loan,
+      );
 
       // Clear ding session cache.
       if (module_exists('ding_session_cache')) {
@@ -75,7 +73,11 @@ function alma_loan_renew($account, $ids) {
       }
     }
     else {
-      $result[$id] = DingProviderLoan::STATUS_NOT_RENEWED;
+      $ding_loan = alma_loan_create_ding_loan($loan);
+      $result[$id] = array(
+        'status' => DingProviderLoan::STATUS_NOT_RENEWED,
+        'loan' => $ding_loan,
+      );
     }
   }
 
@@ -121,4 +123,26 @@ function alma_loan_populate_pseudo_entity($ting_entity) {
   }
 
   return $ting_entity;
+}
+
+/**
+ * Instanciate a new ding provider loan entity
+ *
+ * @param array $data
+ *   Loan data received from alma.
+ *
+ * @return DingProviderLoan
+ *   A new DingProviderLoan entity.
+ */
+function alma_loan_create_ding_loan($data) {
+  $loan = new DingProviderLoan($data['id'], array(
+    'ding_entity_id' => variable_get('ting_agency', '') . ':' . $data['record_id'],
+    'loan_date' => $data['loan_date'],
+    'expiry' => $data['due_date'],
+    'renewable' => $data['is_renewable'],
+    'materials_number' => $data['id'],
+    'notes' => isset($data['notes']) ? $data['notes'] : DingEntityBase::NULL,
+    'message' => isset($data['message']) ? alma_loan_message($data['message']) : DingEntityBase::NULL,
+  ));
+  return $loan;
 }
