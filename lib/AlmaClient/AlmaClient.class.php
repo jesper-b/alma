@@ -647,25 +647,39 @@ class AlmaClient {
     foreach ($doc->getElementsByTagName('loan') as $loan) {
       $id = $loan->getAttribute('id');
       if (in_array($id, $loan_ids)) {
-        if ($renewable = $loan->getElementsByTagName('loanIsRenewable')->item(0)) {
+        $loan = array(
+          'id' => $id,
+          'branch' => $item->getAttribute('loanBranch'),
+          'loan_date' => $item->getAttribute('loanDate'),
+          'due_date' => $item->getAttribute('loanDueDate'),
+          'remaining_renewals' => $item->getAttribute('remainingRenewals'),
+          'is_renewable' => ($item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('value') == 'yes') ? TRUE : FALSE,
+          'renewal_status' => $item->getAttribute('renewalStatus'),
+          'record_id' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('id'),
+          'record_available' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('isAvailable'),
+          'notes' => '',
+        );
+        if ($note = $item->getElementsByTagName('note')->item(0)) {
+          $loan['notes'] = $item->getAttribute('value');
+        }
+        if($item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('value') == 'no') {
+          $loan['message'] = $item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('message');
+        }
+        
+        if ($renewable = $item->getElementsByTagName('loanIsRenewable')->item(0)) {
           $message = $renewable->getAttribute('message');
           $renewable = $renewable->getAttribute('value');
           //If message is "isRenewedToday" we assumme that the renewal is successful.
           //Even if this is not the case any error in the current renewal is irrelevant
           //as the loan has previously been renewed so don't report it as such
           if ($message == 'isRenewedToday' || $renewable == 'yes') {
-            $reservations[$id] = TRUE;
-          }
-          elseif ($message == 'maxNofRenewals') {
-            $reservations[$id] = t('Maximum number of renewals reached');
-          }
-          elseif ($message == 'copyIsReserved') {
-            $reservations[$id] = t('The material is reserved by another loaner');
-          }
-          else {
-            $reservations[$id] = t('Unable to renew material');
+            $loan['message'] = TRUE;
+          } else {
+            $loan['message'] = $message;
           }
         }
+      
+        $results[$id] = $loan;
       }
     }
 
