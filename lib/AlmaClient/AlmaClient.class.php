@@ -256,6 +256,7 @@ class AlmaClient {
       'addresses' => array(),
       'mails' => array(),
       'phones' => array(),
+      'category' => $info->getAttribute('patronCategory'),
     );
 
     foreach ($info->getElementsByTagName('address') as $address) {
@@ -370,12 +371,19 @@ class AlmaClient {
         'branch' => $item->getAttribute('loanBranch'),
         'loan_date' => $item->getAttribute('loanDate'),
         'due_date' => $item->getAttribute('loanDueDate'),
+        'remaining_renewals' => $item->getAttribute('remainingRenewals'),
         'is_renewable' => ($item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('value') == 'yes') ? TRUE : FALSE,
+        'renewal_status' => $item->getAttribute('renewalStatus'),
         'record_id' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('id'),
         'record_available' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('isAvailable'),
+        'notes' => '',
+        'message' => '',
       );
       if ($item->getElementsByTagName('note')->length > 0) {
         $loan['notes'] = $item->getElementsByTagName('note')->item(0)->getAttribute('value');
+      }
+      if($item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('value') == 'no') {
+        $loan['message'] = $item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('message');
       }
       $loans[$id] = $loan;
     }
