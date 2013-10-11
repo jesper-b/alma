@@ -179,3 +179,30 @@ function alma_loan_create_ding_loan($data) {
   ));
   return $loan;
 }
+
+/**
+ * Return one or all of the possible loan messages.
+ * In cases where renewing loans is not possible the system returns a reason message and 
+ * this function converts that system message into a human readable message.
+ *
+ * @param string $message_key
+ *  The message key returned by Alma, or null to retrieve the entire list.
+ *
+ * @return string or array
+ *
+ */
+function alma_loan_message($message_key = null) {
+  $messages = array(
+    'isLoanedToday' => t('This has been loaned today'),
+    'isRenewedToday' => t('This has been renewed today'),
+    'isOverdue' => t('This is overdue'),
+    'patronIsDeniedLoan' => t('You have been denied loans'),
+    'patronHasDebt' => t('You have debt'),
+    'maxNofRenewals' => t('The maximum loans has been reached'),
+    'patronIsInvoiced' => t('You have invoices to payed'),
+    'copyHasSpecialCircCat' => t('This copy has a special category'),
+    'copyIsReserved' => t('This is reserved by another'),
+    'renewalIsDenied' => t('It is not possible to renew'),
+  );
+  return isset($messages[$message_key]) ? $messages[$message_key] : $message_key;
+}
