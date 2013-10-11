@@ -472,6 +472,74 @@ class AlmaClient {
   }
 
   /**
+   * Get payment service information.
+   *
+   * @param string $borr_card
+   *  Active users borrower card.
+   * @param number $pin_code
+   *  Active users pin code.
+   * @param number amount
+   *  The debt amount being payed.
+   *
+   * @return array
+   *  Payment service information retrieved from Alma.
+   *  Possible values are:
+   *    - status: Status of the request.
+   *    - order_id: The request id, required for an add_payment request.
+   *    - amount: The amount being payed.
+   *    - amount_in_subunits: The amount being payed in the smallest available unit.
+   *    - receiver: information about the payment receiver.
+   *      - name
+   *      - phonenumber
+   *      - faxnumber
+   *      - emailaddress
+   *      - address
+   *        - streetaddress
+   *        - zipcode
+   *        - city
+   *        - country
+   */
+  public function get_payment_service_information($borr_card, $pin_code, $amount) {
+    $params = array(
+      'borrCard' => $borr_card, 
+      'pinCode' => $pin_code,
+      'amount' => $amount,
+    );
+    $doc = $this->request('patron/payment/information', $params);
+    
+    // Get base stats
+    $status = $doc->getElementsByTagName('status')->item(0);
+    $order_id = $doc->getElementsByTagName('orderid')->item(0);
+    $amount = $doc->getElementsByTagName('amount')->item(0);
+    $amount_in_subunit = $doc->getElementsByTagName('amountInSubunit')->item(0);
+    // Get receiver information
+    $receiver = $doc->getElementsByTagName('receiver')->item(0);
+    // Get address information
+    $address = $receiver->getElementsByTagName('address')->item(0);
+    // Setup return data
+    $data = array(
+      'status' => $status->getAttribute('value'),
+      'order_id' => $order_id->getAttribute('value'),
+      'amount' => $amount->getAttribute('value'),
+      'amount_in_subunit' => $amount_in_subunit->getAttribute('value'),
+      'receiver' => array(
+        'name' => $receiver->getAttribute('name'),
+        'phonenumber' => $receiver->getAttribute('phoneNumber'),
+        'faxnumber' => $receiver->getAttribute('faxNumber'),
+        'emailaddress' => $receiver->getAttribute('emailAddress'),
+        'address' => array(
+          'streetaddress' => $address->getAttribute('streetAddress'),
+          'zipcode' => $address->getAttribute('zipCode'),
+          'city' => $address->getAttribute('city'),
+          'country' => $address->getAttribute('country'),
+        ),
+      ),
+    );
+    
+    return $data;
+  }
+
+  /**
    * Add a reservation.
    */
   public function add_reservation($borr_card, $pin_code, $reservation) {
