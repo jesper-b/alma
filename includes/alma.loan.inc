@@ -59,6 +59,7 @@ function alma_loan_renew($account, $ids) {
   $result = array();
   $res = alma_client_invoke('renew_loan', $creds['name'], $creds['pass'], $ids);
   
+  $cache_cleared = FALSE;
   foreach ($ids as $id) {
     if (isset($res[$id]) && $res[$id] === TRUE) {
       $ding_loan = alma_loan_create_ding_loan($loan);
@@ -68,8 +69,9 @@ function alma_loan_renew($account, $ids) {
       );
 
       // Clear ding session cache.
-      if (module_exists('ding_session_cache')) {
+      if (module_exists('ding_session_cache') && !$cache_cleared) {
         ding_session_cache_clear('alma', 'loans');
+        $cache_cleared = true;
       }
     }
     else {
