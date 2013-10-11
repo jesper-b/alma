@@ -800,12 +800,31 @@ class AlmaClient {
 
   /**
    * Pay debts.
+   *
+   * @param string $debt_ids
+   *  A comma separated list of debt ids.
+   * @param string $order_id
+   *  The order id from the alma/patron/payment/information request.
+   * @param string $transaction_numer
+   *  The Merchant service provider transaction id
+   * @param number $amount
+   *  The amount payed.
+   *
+   * @see: get_payment_service_information
    */
-  public function add_payment($debt_ids, $order_id = NULL) {
-    $params = array('debts' => $debt_ids);
-
+  public function add_payment($debt_ids, $order_id = NULL, $transaction_number = NULL, $amount = NULL) {
+   $params = array('debts' => $debt_ids);
+    // If the LMS order id (as returned by get_payment_service_information) is set, add it to the parameters.
     if (!empty($order_id)) {
       $params['orderId'] = $order_id;
+    }
+    // If the MSP (Merchant service provider) transaction number is set add it to the parameters.
+    if (!empty($transaction_number)) {
+      $params['transactionNumber'] = $transaction_number;
+    }
+    // If amount is set add it to the paramters and ensure that it is formated in the lowest unit available.
+    if (!empty($amount)) {
+      $params['amount'] = number_format($amount, 2, '', '');
     }
 
     $doc = $this->request('patron/payments/add', $params);

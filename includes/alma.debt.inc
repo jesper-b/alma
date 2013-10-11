@@ -58,9 +58,9 @@ function alma_debt_list($account, $reset = FALSE) {
  * @return array
  *   Array from ALMA with the results.
  */
-function alma_debt_payment_received($amount, $debt_ids = array(), $order_id = NULL) {
+function alma_debt_payment_received($amount, $debt_ids = array(), $transaction_number = NULL, $order_id = NULL) {
   // Return result from Alma.
-  return alma_client_invoke('add_payment', implode(',', $debt_ids), $order_id);
+  return alma_client_invoke('add_payment', implode(',', $debt_ids), $order_id, $transaction_number, $amount);
 }
 
 /**
