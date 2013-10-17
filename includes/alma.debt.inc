@@ -64,6 +64,23 @@ function alma_debt_payment_received($amount, $debt_ids = array(), $transaction_n
 }
 
 /**
+ * Get payment service information from Alma.
+ *
+ * @account object
+ *   The user account requesting the information.
+ * @amount int
+ *   The amount being payed.
+ *
+ * @return array
+ *   An array containing service information from Alma.
+ */
+function alma_debt_get_payment_service_information($account, $amount) {
+  $creds = ding_user_get_creds($account);
+  
+  return alma_client_invoke('get_payment_service_information', $creds['name'], $creds['pass'], $amount);
+}
+
+/**
  * Translate alma debt types into an human readable string in english.
  *
  * @param string $debt_type
