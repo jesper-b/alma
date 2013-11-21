@@ -61,6 +61,7 @@ function alma_loan_renew($account, $ids) {
   
   $cache_cleared = FALSE;
   foreach ($ids as $id) {
+    $loan = $res[$id];
     if (isset($res[$id]) && $res[$id] === TRUE) {
       $ding_loan = alma_loan_create_ding_loan($loan);
       $result[$id] = array(

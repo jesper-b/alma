@@ -640,12 +640,12 @@ class AlmaClient {
     );
 
     $doc = $this->request('patron/loans/renew', $params);
-
+    
     //Built return array as specified by Ding loan provider.
     //See ding_provider_example_loan_renew_loans().
-    $reservations = array();
-    foreach ($doc->getElementsByTagName('loan') as $loan) {
-      $id = $loan->getAttribute('id');
+    $results = array();
+    foreach ($doc->getElementsByTagName('loan') as $item) {
+      $id = $item->getAttribute('id');
       if (in_array($id, $loan_ids)) {
         $loan = array(
           'id' => $id,
@@ -682,8 +682,8 @@ class AlmaClient {
         $results[$id] = $loan;
       }
     }
-
-    return $reservations;
+    
+    return $results;
   }
 
   /**

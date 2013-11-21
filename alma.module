@@ -642,3 +642,17 @@ function alma_ding_session_cache_defaults() {
 
 // Include the feature code.
 include_once 'alma.features.inc';
+
+/**
+ * Get data about a remote loan
+ */
+function alma_get_remote_data($account, $id, $reset = FALSE) {
+  $creds = ding_user_get_creds($account);
+
+  // Try to look in the session for reservation information.
+  if (!isset($_SESSION['catalogue_record_detail'][$id]) || !is_array($_SESSION['catalogue_record_detail']) || $reset) {
+    $_SESSION['catalogue_record_detail'][$id] = alma_client_invoke('catalogue_record_detail', $id);
+  }
+  
+  return $_SESSION['catalogue_record_detail'][$id];
+}
